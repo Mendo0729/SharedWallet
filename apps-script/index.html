@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Finanzas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <?!= HtmlService.createHtmlOutputFromFile('styles').getContent(); ?>
+</head>
+<body>
+  <section id="authView" class="auth-screen">
+    <div class="auth-card">
+      <p class="eyebrow">Acceso seguro</p>
+      <h1>Entra para ver tus finanzas privadas y las compartidas.</h1>
+      <p class="auth-copy">
+        Cada usuario puede ver sus datos privados y todo lo marcado como compartido.
+      </p>
+
+      <form id="loginForm" class="stack-form">
+        <label>
+          URL del Web App
+          <input id="apiUrl" name="apiUrl" type="url" placeholder="https://script.google.com/macros/s/tu-id/exec" required>
+        </label>
+
+        <label>
+          Usuario
+          <input name="username" type="text" placeholder="abdiel o aysah" required>
+        </label>
+
+        <label>
+          Contrasena
+          <input name="password" type="password" placeholder="Tu contrasena" required>
+        </label>
+
+        <button type="submit" class="btn btn-primary">Entrar</button>
+      </form>
+
+      <p id="authStatus" class="status-message">Ingresa la URL de tu Apps Script y tus credenciales.</p>
+    </div>
+  </section>
+
+  <div id="appView" class="app-view is-hidden">
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy-block">
+          <p class="eyebrow">Mis Finanzas</p>
+          <h1>Controla lo tuyo y lo compartido en un solo lugar.</h1>
+          <p class="hero-copy">
+            Tu panel muestra solo tus movimientos privados y todo lo compartido con tu pareja.
+          </p>
+        </div>
+
+        <div class="hero-card">
+          <p class="hero-card-label">Sesion actual</p>
+          <strong id="heroBalance">$0.00</strong>
+          <span id="heroStatus">Sincronizando tu informacion.</span>
+          <div class="hero-user">
+            <span id="sessionUserBadge" class="user-badge">-</span>
+            <button id="logoutButton" type="button" class="btn btn-ghost">Salir</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel panel-summary">
+          <div class="section-title">
+            <h2>Resumen del mes</h2>
+            <p>Solo se muestran tus datos privados y todo lo compartido.</p>
+          </div>
+
+          <div class="summary-grid">
+            <article class="metric-card income">
+              <span>Ingresos</span>
+              <strong id="incomeTotal">$0.00</strong>
+            </article>
+            <article class="metric-card expense">
+              <span>Gastos</span>
+              <strong id="expenseTotal">$0.00</strong>
+            </article>
+            <article class="metric-card balance">
+              <span>Balance</span>
+              <strong id="balanceTotal">$0.00</strong>
+            </article>
+            <article class="metric-card count">
+              <span>Ahorro</span>
+              <strong id="savingTotal">$0.00</strong>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel panel-form">
+          <div class="section-title">
+            <h2>Nuevo movimiento</h2>
+            <p>El registro se guarda a tu nombre y puedes elegir si sera privado o compartido.</p>
+          </div>
+
+          <form id="movementForm" class="grid-form">
+            <label>
+              Fecha
+              <input name="fecha" type="date" required>
+            </label>
+
+            <label>
+              Tipo
+              <select name="tipo" required>
+                <option value="GASTO">Gasto</option>
+                <option value="INGRESO">Ingreso</option>
+                <option value="TRANSFERENCIA">Transferencia</option>
+              </select>
+            </label>
+
+            <label>
+              Alcance
+              <select name="scope" required>
+                <option value="PRIVADO">Privado</option>
+                <option value="COMPARTIDO">Compartido</option>
+              </select>
+            </label>
+
+            <label>
+              Cuenta
+              <select name="cuenta" required></select>
+            </label>
+
+            <label>
+              Categoria
+              <select name="categoria" required></select>
+            </label>
+
+            <label>
+              Metodo de pago
+              <select name="metodo_pago" required></select>
+            </label>
+
+            <label>
+              Monto
+              <input name="monto" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+            </label>
+
+            <label>
+              Recurrente
+              <select name="recurrente">
+                <option value="NO">No</option>
+                <option value="SI">Si</option>
+              </select>
+            </label>
+
+            <label class="full-width">
+              Descripcion
+              <input name="descripcion" type="text" maxlength="120" placeholder="Ej. supermercado, gasolina, salario, ahorro del mes">
+            </label>
+
+            <button type="submit" class="btn btn-primary full-width">Guardar movimiento</button>
+          </form>
+        </section>
+
+        <section class="panel panel-filters">
+          <div class="section-title">
+            <h2>Filtros</h2>
+            <p>Explora tus movimientos por mes, categoria y alcance.</p>
+          </div>
+
+          <form id="filtersForm" class="filters-grid">
+            <label>
+              Mes
+              <input name="mes" type="month">
+            </label>
+
+            <label>
+              Alcance
+              <select name="scope">
+                <option value="">Todos</option>
+                <option value="PRIVADO">Privado</option>
+                <option value="COMPARTIDO">Compartido</option>
+              </select>
+            </label>
+
+            <label>
+              Categoria
+              <select name="categoria">
+                <option value="">Todas</option>
+              </select>
+            </label>
+          </form>
+        </section>
+
+        <section class="panel panel-table">
+          <div class="section-title">
+            <h2>Movimientos</h2>
+            <p>Historial visible para tu usuario.</p>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Alcance</th>
+                  <th>Registrado por</th>
+                  <th>Categoria</th>
+                  <th>Cuenta</th>
+                  <th>Metodo</th>
+                  <th>Descripcion</th>
+                  <th>Monto</th>
+                </tr>
+              </thead>
+              <tbody id="movementsTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel panel-savings">
+          <div class="section-title">
+            <h2>Metas de ahorro</h2>
+            <p>Crea metas privadas o compartidas segun corresponda.</p>
+          </div>
+
+          <form id="savingGoalForm" class="goal-form">
+            <label>
+              Meta
+              <input name="meta" type="text" maxlength="80" placeholder="Ej. Fondo de emergencia" required>
+            </label>
+
+            <label>
+              Alcance
+              <select name="scope" required>
+                <option value="PRIVADO">Privado</option>
+                <option value="COMPARTIDO">Compartido</option>
+              </select>
+            </label>
+
+            <label>
+              Objetivo
+              <input name="objetivo_monto" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+            </label>
+
+            <label>
+              Fecha objetivo
+              <input name="fecha_objetivo" type="date" required>
+            </label>
+
+            <button type="submit" class="btn btn-primary">Agregar meta</button>
+          </form>
+
+          <div id="savingsGoals" class="goals-grid"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <template id="movementRowTemplate">
+    <tr>
+      <td data-field="fecha" data-label="Fecha"></td>
+      <td data-field="tipo" data-label="Tipo"></td>
+      <td data-field="scope" data-label="Alcance"></td>
+      <td data-field="owner" data-label="Registrado por"></td>
+      <td data-field="categoria" data-label="Categoria"></td>
+      <td data-field="cuenta" data-label="Cuenta"></td>
+      <td data-field="metodo_pago" data-label="Metodo"></td>
+      <td data-field="descripcion" data-label="Descripcion"></td>
+      <td data-field="monto" data-label="Monto"></td>
+    </tr>
+  </template>
+
+  <template id="goalCardTemplate">
+    <article class="goal-card">
+      <div class="goal-head">
+        <div>
+          <span data-field="scope" class="goal-person"></span>
+          <h3 data-field="meta"></h3>
+        </div>
+        <strong data-field="owner"></strong>
+      </div>
+      <p class="goal-date">Meta para <span data-field="fecha_objetivo"></span></p>
+      <div class="goal-bar">
+        <span data-field="progressFill"></span>
+      </div>
+      <p class="goal-values">
+        Ahorrado: <strong data-field="saldo_actual"></strong> de <strong data-field="objetivo_monto"></strong>
+      </p>
+    </article>
+  </template>
+
+  <script src="./config.js"></script>
+  <script>
+window.APP_CONFIG = { apiUrl: "<?= getWebAppUrl() ?>" };
+</script>
+<?!= HtmlService.createHtmlOutputFromFile('app').getContent(); ?>
+</body>
+</html>

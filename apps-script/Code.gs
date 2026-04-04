@@ -55,9 +55,14 @@ const DEFAULT_CATEGORIES = [
 ];
 
 function doGet(e) {
-  const action = (e && e.parameter && e.parameter.action) || "health";
+  const action = (e && e.parameter && e.parameter.action) || "app";
 
   try {
+    if (action === "app") {
+      return HtmlService.createHtmlOutputFromFile("index")
+        .setTitle("Mis Finanzas");
+    }
+
     if (action === "health") {
       return jsonResponse({
         success: true,
@@ -107,6 +112,10 @@ function doGet(e) {
       message: error.message,
     });
   }
+}
+
+function getWebAppUrl() {
+  return ScriptApp.getService().getUrl();
 }
 
 function doPost(e) {
