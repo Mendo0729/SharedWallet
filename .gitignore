@@ -2,4 +2,5 @@ Thumbs.db
 .DS_Store
 .clasp.json
 .env
+config.js
 node_modules/
