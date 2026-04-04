@@ -28,13 +28,10 @@ const authView = document.querySelector("#authView");
 const appView = document.querySelector("#appView");
 const loginForm = document.querySelector("#loginForm");
 const authStatus = document.querySelector("#authStatus");
-const configForm = document.querySelector("#configForm");
 const movementForm = document.querySelector("#movementForm");
 const filtersForm = document.querySelector("#filtersForm");
 const savingGoalForm = document.querySelector("#savingGoalForm");
-const syncButton = document.querySelector("#syncButton");
 const logoutButton = document.querySelector("#logoutButton");
-const connectionStatus = document.querySelector("#connectionStatus");
 const movementsTable = document.querySelector("#movementsTable");
 const movementRowTemplate = document.querySelector("#movementRowTemplate");
 const goalCardTemplate = document.querySelector("#goalCardTemplate");
@@ -42,7 +39,6 @@ const savingsGoals = document.querySelector("#savingsGoals");
 const heroBalance = document.querySelector("#heroBalance");
 const heroStatus = document.querySelector("#heroStatus");
 const sessionUserBadge = document.querySelector("#sessionUserBadge");
-const savedApiUrlInput = document.querySelector("#savedApiUrl");
 const loginApiUrlInput = document.querySelector("#apiUrl");
 const movementCategorySelect = movementForm.categoria;
 const movementCuentaSelect = movementForm.cuenta;
@@ -75,19 +71,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function restoreConfiguration() {
-  state.apiUrl = (localStorage.getItem(STORAGE_KEYS.apiUrl) || "").trim();
+  const storedUrl = (localStorage.getItem(STORAGE_KEYS.apiUrl) || "").trim();
+  const configUrl = (window.APP_CONFIG && window.APP_CONFIG.apiUrl ? String(window.APP_CONFIG.apiUrl) : "").trim();
+  state.apiUrl = storedUrl || configUrl;
   state.sessionToken = (localStorage.getItem(STORAGE_KEYS.sessionToken) || "").trim();
   loginApiUrlInput.value = state.apiUrl;
-  savedApiUrlInput.value = state.apiUrl;
 }
 
 function bindEvents() {
   loginForm.addEventListener("submit", handleLoginSubmit);
-  configForm.addEventListener("submit", handleConfigSubmit);
   movementForm.addEventListener("submit", handleMovementSubmit);
   filtersForm.addEventListener("input", handleFilterChange);
   savingGoalForm.addEventListener("submit", handleGoalSubmit);
-  syncButton.addEventListener("click", syncAll);
   logoutButton.addEventListener("click", handleLogout);
 }
 
@@ -122,7 +117,6 @@ async function handleLoginSubmit(event) {
 
   state.apiUrl = apiUrl;
   loginApiUrlInput.value = apiUrl;
-  savedApiUrlInput.value = apiUrl;
   localStorage.setItem(STORAGE_KEYS.apiUrl, apiUrl);
   setAuthStatus("Iniciando sesion...");
 
@@ -139,21 +133,12 @@ async function handleLoginSubmit(event) {
     state.sessionUser = payload.data.user;
     localStorage.setItem(STORAGE_KEYS.sessionToken, state.sessionToken);
     loginForm.reset();
-    loginApiUrlInput.value = state.apiUrl;
-    showAppView();
-    await syncAll();
+  showAppView();
+  await syncAll();
   } catch (error) {
     console.error(error);
     setAuthStatus(error.message || "No fue posible iniciar sesion.");
   }
-}
-
-function handleConfigSubmit(event) {
-  event.preventDefault();
-  state.apiUrl = savedApiUrlInput.value.trim();
-  loginApiUrlInput.value = state.apiUrl;
-  localStorage.setItem(STORAGE_KEYS.apiUrl, state.apiUrl);
-  updateConnectionMessage("URL guardada correctamente.");
 }
 
 async function handleMovementSubmit(event) {
@@ -338,12 +323,20 @@ function renderMovements() {
         const fieldName = field.dataset.field;
 
         if (fieldName === "tipo") {
-          field.innerHTML = `<span class="${typeClass(movement.tipo)}">${movement.tipo}</span>`;
+          const badge = document.createElement("span");
+          badge.className = typeClass(movement.tipo);
+          badge.textContent = movement.tipo;
+          field.textContent = "";
+          field.appendChild(badge);
           return;
         }
 
         if (fieldName === "scope") {
-          field.innerHTML = `<span class="${scopeClass(movement.scope)}">${movement.scope}</span>`;
+          const badge = document.createElement("span");
+          badge.className = scopeClass(movement.scope);
+          badge.textContent = movement.scope;
+          field.textContent = "";
+          field.appendChild(badge);
           return;
         }
 
@@ -511,7 +504,9 @@ function setAuthStatus(message) {
 }
 
 function updateConnectionMessage(message) {
-  connectionStatus.textContent = message;
+  if (typeof connectionStatus !== "undefined" && connectionStatus) {
+    connectionStatus.textContent = message;
+  }
 }
 
 function buildUrl(action) {

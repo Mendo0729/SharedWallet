@@ -64,25 +64,6 @@
       </header>
 
       <main class="layout">
-        <section class="panel panel-config">
-          <div class="section-title">
-            <h2>Conexion</h2>
-            <p>Gestiona la sincronizacion de la sesion activa.</p>
-          </div>
-
-          <form id="configForm" class="stack-form">
-            <label for="savedApiUrl">URL del Web App</label>
-            <input id="savedApiUrl" name="savedApiUrl" type="url" placeholder="https://script.google.com/macros/s/tu-id/exec" required>
-            <button type="submit" class="btn btn-primary">Guardar URL</button>
-          </form>
-
-          <div class="config-actions">
-            <button id="syncButton" class="btn btn-secondary" type="button">Sincronizar</button>
-          </div>
-
-          <p id="connectionStatus" class="status-message">Sesion iniciada correctamente.</p>
-        </section>
-
         <section class="panel panel-summary">
           <div class="section-title">
             <h2>Resumen del mes</h2>
@@ -303,6 +284,7 @@
     </article>
   </template>
 
+  <script src="./config.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
