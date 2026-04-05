@@ -75,7 +75,7 @@ function restoreConfiguration() {
   const storedUrl = (localStorage.getItem(STORAGE_KEYS.apiUrl) || "").trim();
   const configUrl = (window.APP_CONFIG && window.APP_CONFIG.apiUrl ? String(window.APP_CONFIG.apiUrl) : "").trim();
   state.apiUrl = storedUrl || configUrl;
-  state.sessionToken = (localStorage.getItem(STORAGE_KEYS.sessionToken) || "").trim();
+  state.sessionToken = (sessionStorage.getItem(STORAGE_KEYS.sessionToken) || "").trim();
   loginApiUrlInput.value = state.apiUrl;
 }
 
@@ -132,7 +132,7 @@ async function handleLoginSubmit(event) {
 
     state.sessionToken = payload.data.token;
     state.sessionUser = payload.data.user;
-    localStorage.setItem(STORAGE_KEYS.sessionToken, state.sessionToken);
+    sessionStorage.setItem(STORAGE_KEYS.sessionToken, state.sessionToken);
     loginForm.reset();
   showAppView();
   await syncAll();
@@ -492,7 +492,7 @@ function clearSession() {
   state.sessionUser = null;
   state.movements = [];
   state.goals = [];
-  localStorage.removeItem(STORAGE_KEYS.sessionToken);
+  sessionStorage.removeItem(STORAGE_KEYS.sessionToken);
 }
 
 function resetMovementForm() {
