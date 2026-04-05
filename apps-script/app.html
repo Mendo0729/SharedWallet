@@ -272,9 +272,7 @@ function renderSessionHeader() {
 }
 
 function renderSummary() {
-  const filteredMovements = getFilteredMovements();
-
-  const totals = filteredMovements.reduce(
+  const totals = state.movements.reduce(
     (accumulator, movement) => {
       if (movement.tipo === "INGRESO") {
         accumulator.income += movement.monto;

@@ -230,6 +230,7 @@ select {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+
 .goal-form {
   grid-template-columns: 2fr 1fr 1fr 1fr auto;
   align-items: end;
