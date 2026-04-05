@@ -432,7 +432,7 @@ function normalizeMovement(movement) {
     metodo_pago: String(movement.metodo_pago || ""),
     descripcion: String(movement.descripcion || ""),
     recurrente: String(movement.recurrente || "NO"),
-    mes: String(movement.mes || String(movement.fecha || "").slice(0, 7)),
+    mes: String(movement.mes || String(movement.fecha || "").slice(0, 7)).slice(0, 7),
   };
 }
 

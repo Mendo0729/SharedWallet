@@ -194,7 +194,7 @@ select {
 }
 
 .panel-summary {
-  grid-column: span 8;
+  grid-column: span 12;
 }
 
 .panel-form,
@@ -324,6 +324,10 @@ select:focus {
 .metric-card strong {
   font-family: "Space Grotesk", sans-serif;
   font-size: clamp(1.6rem, 3vw, 2.3rem);
+  display: block;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .metric-card.income {
