@@ -281,6 +281,17 @@
       <p class="goal-values">
         Ahorrado: <strong data-field="saldo_actual"></strong> de <strong data-field="objetivo_monto"></strong>
       </p>
+      <div class="goal-actions">
+        <button type="button" class="btn btn-secondary" data-action="toggle-contribution">Anadir aporte</button>
+        <button type="button" class="btn btn-ghost" data-action="delete-goal">Eliminar meta</button>
+      </div>
+      <form class="goal-contribution-form is-hidden" data-role="contribution-form">
+        <label>
+          Nuevo aporte
+          <input type="number" name="amount" min="0.01" step="0.01" placeholder="0.00" required>
+        </label>
+        <button type="submit" class="btn btn-primary">Guardar aporte</button>
+      </form>
     </article>
   </template>
 

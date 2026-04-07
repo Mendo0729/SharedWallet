@@ -17,7 +17,7 @@ const SHEETS = {
   ],
   CATEGORIAS: ["categoria", "tipo", "activa"],
   PRESUPUESTO_MENSUAL: ["mes", "owner", "scope", "categoria", "presupuesto_monto"],
-  AHORROS_METAS: ["meta", "owner", "scope", "objetivo_monto", "fecha_objetivo", "saldo_actual", "estado"],
+  AHORROS_METAS: ["id", "meta", "owner", "scope", "objetivo_monto", "fecha_objetivo", "saldo_actual", "estado"],
   CONFIG: ["grupo", "clave", "valor"],
   USUARIOS: ["username", "password_hash", "nombre", "owner_key", "estado"],
   SESIONES: ["token", "username", "owner_key", "expires_at", "estado"],
@@ -170,6 +170,28 @@ function doPost(e) {
       });
     }
 
+    if (action === "addGoalContribution") {
+      const session = requireSession(request.token);
+      const payload = request.payload || {};
+      addGoalContribution(session, String(payload.goalId || ""), Number(payload.amount));
+
+      return jsonResponse({
+        success: true,
+        message: "Aporte agregado correctamente.",
+      });
+    }
+
+    if (action === "deleteGoal") {
+      const session = requireSession(request.token);
+      const payload = request.payload || {};
+      deleteGoal(session, String(payload.goalId || ""));
+
+      return jsonResponse({
+        success: true,
+        message: "Meta eliminada correctamente.",
+      });
+    }
+
     return jsonResponse({
       success: false,
       message: "Accion POST no soportada.",
@@ -189,6 +211,7 @@ function setupInfrastructure() {
 
   seedCatalogs();
   seedUsers();
+  ensureGoalIds();
 
   return {
     success: true,
@@ -230,6 +253,17 @@ function seedUsers() {
     success: true,
     message: "Usuarios iniciales creados.",
   };
+}
+
+function ensureGoalIds() {
+  const sheet = ensureSheet("AHORROS_METAS", SHEETS.AHORROS_METAS);
+  const rows = getDataRows(sheet, SHEETS.AHORROS_METAS.length);
+
+  rows.forEach(function (row, index) {
+    if (!String(row[0] || "").trim()) {
+      sheet.getRange(index + 2, 1).setValue(Utilities.getUuid());
+    }
+  });
 }
 
 function login(username, password) {
@@ -336,6 +370,7 @@ function appendGoal(goal) {
   const sheet = ensureSheet("AHORROS_METAS", SHEETS.AHORROS_METAS);
 
   sheet.appendRow([
+    goal.id,
     goal.meta,
     goal.owner,
     goal.scope,
@@ -368,6 +403,7 @@ function normalizeMovementPayload(payload, session) {
 
 function normalizeGoalPayload(payload, session) {
   return {
+    id: Utilities.getUuid(),
     meta: String(payload.meta || "").trim(),
     owner: session.owner_key,
     scope: normalizeScope(payload.scope),
@@ -424,6 +460,51 @@ function validateGoal(goal) {
   if (!goal.fecha_objetivo) {
     throw new Error("La fecha objetivo es obligatoria.");
   }
+}
+
+function addGoalContribution(session, goalId, amount) {
+  if (!goalId) {
+    throw new Error("La meta seleccionada no es valida.");
+  }
+
+  if (Number(amount) <= 0) {
+    throw new Error("El aporte debe ser mayor que cero.");
+  }
+
+  const locatedGoal = findGoalRowById(goalId);
+
+  if (!locatedGoal) {
+    throw new Error("No se encontro la meta indicada.");
+  }
+
+  const goal = locatedGoal.goal;
+
+  if (!canViewRecord(session, goal.owner, goal.scope)) {
+    throw new Error("No tienes permiso para modificar esta meta.");
+  }
+
+  const currentAmount = Number(goal.saldo_actual) || 0;
+  locatedGoal.sheet.getRange(locatedGoal.rowNumber, 7).setValue(currentAmount + Number(amount));
+}
+
+function deleteGoal(session, goalId) {
+  if (!goalId) {
+    throw new Error("La meta seleccionada no es valida.");
+  }
+
+  const locatedGoal = findGoalRowById(goalId);
+
+  if (!locatedGoal) {
+    throw new Error("No se encontro la meta indicada.");
+  }
+
+  const goal = locatedGoal.goal;
+
+  if (!canViewRecord(session, goal.owner, goal.scope)) {
+    throw new Error("No tienes permiso para eliminar esta meta.");
+  }
+
+  locatedGoal.sheet.deleteRow(locatedGoal.rowNumber);
 }
 
 function requireSession(token) {
@@ -507,6 +588,27 @@ function findUserByUsername(username) {
   return foundUser;
 }
 
+function findGoalRowById(goalId) {
+  const sheet = ensureSheet("AHORROS_METAS", SHEETS.AHORROS_METAS);
+  const headers = SHEETS.AHORROS_METAS;
+  const rows = getDataRows(sheet, headers.length);
+  let locatedGoal = null;
+
+  rows.forEach(function (row, index) {
+    const goal = mapRowToObject(headers, row);
+
+    if (String(goal.id || "") === goalId) {
+      locatedGoal = {
+        goal: goal,
+        rowNumber: index + 2,
+        sheet: sheet,
+      };
+    }
+  });
+
+  return locatedGoal;
+}
+
 function canViewRecord(session, owner, scope) {
   return scope === "COMPARTIDO" || owner === session.owner_key;
 }
@@ -546,7 +648,23 @@ function ensureSheet(sheetName, headers) {
     sheet.setFrozenRows(1);
   }
 
+  applySheetFormatting(sheetName, sheet);
+
   return sheet;
+}
+
+function applySheetFormatting(sheetName, sheet) {
+  if (sheetName === "AHORROS_METAS") {
+    formatSavingsGoalsSheet(sheet);
+  }
+}
+
+function formatSavingsGoalsSheet(sheet) {
+  const maxRows = Math.max(sheet.getMaxRows() - 1, 1);
+
+  sheet.getRange(2, 5, maxRows, 1).setNumberFormat("$#,##0.00");
+  sheet.getRange(2, 6, maxRows, 1).setNumberFormat("yyyy-mm-dd");
+  sheet.getRange(2, 7, maxRows, 1).setNumberFormat("$#,##0.00");
 }
 
 function writeRowsIfEmpty(sheet, rows) {

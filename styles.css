@@ -450,6 +450,29 @@ tbody tr:last-child td {
   margin: 14px 0 0;
 }
 
+.goal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.goal-actions .btn {
+  width: auto;
+}
+
+.goal-contribution-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-top: 14px;
+  align-items: end;
+}
+
+.goal-contribution-form label {
+  margin: 0;
+}
+
 .goal-bar {
   height: 12px;
   margin-top: 18px;
@@ -604,6 +627,12 @@ tbody tr:last-child td {
   }
 
   .hero-user {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .goal-actions,
+  .goal-contribution-form {
     display: grid;
     grid-template-columns: 1fr;
   }

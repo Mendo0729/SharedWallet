@@ -84,6 +84,8 @@ function bindEvents() {
   filtersForm.addEventListener("input", handleFilterChange);
   savingGoalForm.addEventListener("submit", handleGoalSubmit);
   logoutButton.addEventListener("click", handleLogout);
+  savingsGoals.addEventListener("click", handleGoalActionClick);
+  savingsGoals.addEventListener("submit", handleGoalContributionSubmit);
 }
 
 async function restoreSession() {
@@ -365,6 +367,9 @@ function renderGoals() {
   state.goals.forEach((goal) => {
     const progress = Math.min((goal.saldo_actual / goal.objetivo_monto) * 100, 100);
     const goalFragment = goalCardTemplate.content.cloneNode(true);
+    const goalCard = goalFragment.querySelector(".goal-card");
+
+    goalCard.dataset.goalId = goal.id;
 
     goalFragment.querySelector('[data-field="scope"]').textContent = goal.scope;
     goalFragment.querySelector('[data-field="meta"]').textContent = goal.meta;
@@ -376,6 +381,95 @@ function renderGoals() {
 
     savingsGoals.appendChild(goalFragment);
   });
+}
+
+function handleGoalActionClick(event) {
+  const button = event.target.closest("[data-action]");
+
+  if (!button) {
+    return;
+  }
+
+  const goalCard = button.closest(".goal-card");
+
+  if (!goalCard) {
+    return;
+  }
+
+  const goalId = goalCard.dataset.goalId;
+
+  if (button.dataset.action === "toggle-contribution") {
+    const contributionForm = goalCard.querySelector('[data-role="contribution-form"]');
+    contributionForm.classList.toggle("is-hidden");
+    if (!contributionForm.classList.contains("is-hidden")) {
+      contributionForm.querySelector('input[name="amount"]').focus();
+    }
+    return;
+  }
+
+  if (button.dataset.action === "delete-goal") {
+    handleGoalDelete(goalId);
+  }
+}
+
+async function handleGoalContributionSubmit(event) {
+  const form = event.target.closest('[data-role="contribution-form"]');
+
+  if (!form) {
+    return;
+  }
+
+  event.preventDefault();
+
+  const goalCard = form.closest(".goal-card");
+  const goalId = goalCard ? goalCard.dataset.goalId : "";
+  const amount = Number(new FormData(form).get("amount"));
+
+  try {
+    await postJson(state.apiUrl, {
+      action: "addGoalContribution",
+      payload: {
+        goalId: goalId,
+        amount: amount,
+      },
+    });
+
+    form.reset();
+    form.classList.add("is-hidden");
+    updateConnectionMessage("Aporte agregado correctamente.");
+    await syncAll();
+  } catch (error) {
+    console.error(error);
+    updateConnectionMessage(error.message || "No se pudo agregar el aporte.");
+  }
+}
+
+async function handleGoalDelete(goalId) {
+  if (!goalId) {
+    updateConnectionMessage("No se encontro la meta seleccionada.");
+    return;
+  }
+
+  const confirmed = window.confirm("¿Seguro que quieres eliminar esta meta de ahorro?");
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await postJson(state.apiUrl, {
+      action: "deleteGoal",
+      payload: {
+        goalId: goalId,
+      },
+    });
+
+    updateConnectionMessage("Meta eliminada correctamente.");
+    await syncAll();
+  } catch (error) {
+    console.error(error);
+    updateConnectionMessage(error.message || "No se pudo eliminar la meta.");
+  }
 }
 
 function renderCatalogs() {
@@ -436,6 +530,7 @@ function normalizeMovement(movement) {
 
 function normalizeGoal(goal) {
   return {
+    id: String(goal.id || ""),
     meta: String(goal.meta || ""),
     owner: String(goal.owner || ""),
     scope: String(goal.scope || "PRIVADO").toUpperCase(),
